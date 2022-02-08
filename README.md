@@ -1,6 +1,10 @@
 # taichi-techtonic
 Architectural Taichi Exploration
 
+- [bilibili](https://space.bilibili.com/1779922645/channel/seriesdetail?sid=337716): 太极图形课
+- [docs](https://docs.taichi.graphics)
+- [forum](https://forum.taichi.graphics/
+)
 ## Basic
 
 ### Scope
@@ -66,6 +70,37 @@ def good_kernel(vx: ti.f32, vy: ti.f32):
 
 ```
 
+**Passing arguments using `ti.template()`**
+- primary types: `ti.f32`, `ti.i32`, `ti.f64`, ...
+- compound types: `ti.Vector()`, `ti.Matrix()`, ..
+- fields: `ti.field()`, `ti.Vector.field()`, ...
+- taichi class: `@ti.data_oriented`
+``` python
+@ti.kernel
+def foo(x: ti.template()):
+    print(x[0], x[1])
+
+# must support by taichi 
+a = ti.Vector([42, 3.14])
+foo(a)
+```
+variables pass by reference but modify is not allowed
+
+**more general**, use `ti.grouped()`
+
+``` python
+@ti.kernel
+def copy(x: ti.template(), y: ti.template()):
+    assert x.shape == y.shape
+    for I in ti.grouped(y):
+        # if y is 0D, then I = None
+        # if y is 1D, then i = i
+        # if y is 2D, then i = i, j
+        # if y is 3D, then i = i, j, k
+        # ...
+
+        x[I] = y[I]
+```
 #### Kernel return value
 - may or may not return
 - return on single scalar value only
@@ -342,7 +377,7 @@ a@a             # @ denotes matrix multiplication
 
 #### Print
 - print is parallelized..
-See more in`parallelized.py`
+See more in `parallelized.py`
 
 #### GUI
 2D: `ti.GUI`
@@ -383,4 +418,93 @@ while gui.running:
 #### [GGUI](https://docs.taichi.graphics/zh-Hans/lang/articles/misc/ggui)
 - realtime rendering (GPU backend only)
   
+
+``` python
+import taichi as ti
+ti.init(arch=ti.gpu)
+
+window = ti.ui.Window('Window Title', (800, 600))
+
+scene = ti.ui.Scene()
+canvas = window.get_canvas()
+
+camera = ti.ui.make_camera()
+camera.position(0.5, 1.0, 1.95)
+camera.lookat(0.5, 0.3, 0.5)
+camera.fov(55)
+
+vertices = ti.Vector.field(3, ti.f32, shape=1)
+vertices[0] = ti.Vector([0.0, 0.0, 0.0])
+
+colors = ti.Vector.field(4, ti.f32, shape=1)
+colors[0] = ti.Vector([1.0, 1.0, 1.0, 1.0])
+
+def render():
+    # hold left mouse button (LMB) to move
+    camera.track_user_inputs(window, movement_speed=0.03, hold_key=ti.ui.LMB) 
+    
+    scene.set_camera(camera)
+    scene.ambient_light((0.1, 0.1, 0.1))
+    
+    scene.particles(vertices, per_vertex_color=colors, radius=0.1)
+    scene.point_light(pos=(0.5, 1.5, 0.5), color=(0.5, 0.5, 0.5))
+    scene.point_light(pos=(0.5, 1.5, 1.5), color=(0.5, 0.5, 0.5))
+
+    canvas.scene(scene)
+
+
+while window.running:
+    render()
+    window.show()
+```
+
+
+### Taichi speed tricks
+#### Metaprogramming
+- Metaprogramming: treat other programs as their data
+
+#### `ti.static()`
+
+``` python
+enable_projection = False
+x = ti.field(ti.f32, shape=10)
+
+@ti.kernel
+def static():
+    if ti.static(enable_projection): #no runtime overhead
+        x[0] = 1
+
+
+@ti.kernel
+def foo():
+    for i in ti.static(range(4)):
+        print(i)
+
+# is equivalent to:
+def foo():
+    print(0)
+    print(1)
+    print(2)
+    print(3)
+# and will be serialized
+
+```
+#### OOP
+``` python
+@ti.data_oriented
+class TaichiWheel:
+    def __init__(self, radius, width, roll_fric):
+        self.radius = radius
+        self.width = width
+        self.roll_fric = roll_fric
+        self.pos = ti.Vector.field(3, ti.f32, shape=4)
+    
+    @ti.kernel
+    def Roll(self):
+        # ...
+    
+    @ti.func
+    def foo(self):
+        # ...
+```
 
