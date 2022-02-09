@@ -1,12 +1,8 @@
 # taichi-techtonic
 Architectural Taichi Exploration
-
-- [bilibili](https://space.bilibili.com/1779922645/channel/seriesdetail?sid=337716): 太极图形课
-- [docs](https://docs.taichi.graphics)
-- [forum](https://forum.taichi.graphics/
-)
 ## Basic
 
+[[bilibili](https://space.bilibili.com/1779922645/channel/seriesdetail?sid=337716)] [[docs](https://docs.taichi.graphics)] [[forum](https://forum.taichi.graphics/)] [[API ref](https://api-docs.taichi.graphics)]
 ### Scope
 - Python Scope
 - Taichi Scope
@@ -757,3 +753,78 @@ print(f">>>> Computation was successful?: {isSuccess}")
 # [0.5 0.  0.  0.5]
 # >>>> Computation was successful?: True
 ```
+
+
+### Debug
+
+#### Print
+
+**Runtime print**
+- print requires a system called
+
+**Static print**
+- `ti.static_print(x)`
+
+**Visualize field**
+``` python
+x = ti.field(ti.f32, (256, 256))
+
+@ti.kernel
+def foo():
+    for i, j in x:
+        x[i, j] = (i+j)/512.0
+
+gui = ti.GUI("Debug", (256, 256))
+while gui.running:
+    gui.set_image(x)
+    gui.show()
+```
+
+#### Debug mode
+- open debug mode (default `False`)
+- use `assert` to trigger error
+``` python
+ti.init(arch=ti.cpu, debug=True)
+
+x = ti.field(ti.f32, 128)
+@ti.kernel
+def do_sqrt_all():
+    for i in x:
+        assert x[i] >= 0 # RuntimeError if x[i] < 0
+        x[i] = ti.sqrt(x[i])
+```
+
+#### Turn off advanced option
+
+- Turn off parallelization
+
+``` python
+ti.init(arch=ti.cpu, cpu_max_num_threads=1)
+```
+- Turn off advanced optimization (in case compiler omit your code)
+
+``` python
+ti.init(arch=ti.cpu, advanced_optimization=False)
+```
+
+### Profiling
+#### [Amdahl's Law](https://en.wikipedia.org/wiki/Amdahl's_law)
+theoretical speedup in latency of the execution of a task at fixed workload that can be expected of a system whose resources are improved.
+
+![](imgs/2022-02-09-22-00-12.png)
+
+#### Taichi profiler
+- docs [[link](https://docs.taichi.graphics/lang/articles/misc/profiler)]
+- Performance tuning tips [[link](https://docs.taichi.graphics/lang/articles/advanced/performance)]
+``` python
+# enable taichi's kernel profiler:
+ti.init(kernel_profiler=True, arch=ti.gpu)
+
+# output profiling info:d
+ti.print_kernel_profile_info('count')
+
+# clear profiling info
+ti.clear_kernel_profile_info()
+```
+
+
