@@ -629,11 +629,42 @@ ti.root.dense(ti.i, 8).place(x, y)
 ```
 ### Sparse Computation
 
+use pointer which present the head of the list, only activated when you give the cell value
+
+``` python
+x = ti.field(ti.i32)
+
+block1 = ti.root.pointer(ti.i, 3)
+block2 = block1.dense(ti.j, 3)
+block2.place(x)
+
+# activate a cell
+x[0, 0] = 1
+
+# access will omit the null pointer
+@ti.kernel
+def access_all():
+    for i, j in x:
+        print(x[i, j])
+
+# check activation status
+ti.is_active(x, [i, j, ...])
+ti.activate(x, [i, j, ...])
+ti.deactivate(x, [i, j, ...])
+x.deactivate_all()
+x.rescale_index() # 可以获得祖先节点的值
+```
 Note: Don't use pointer everywhere
 - `ti.f32` -> 32 bits
 - taichi pointer -> 64 bits
 
+**Some examples:**
+![](imgs/2022-02-09-21-06-12.png)
+![](imgs/2022-02-09-21-06-25.png)
+![](imgs/2022-02-09-21-06-48.png)
+
 ### Sparse Matrix
+[API](https://docs.taichi.graphics/lang/articles/advanced/sparse_matrix)
 #### Build a sparse matrix
 
 - create a builder using `ti.SparseMatrixBuilder()`
@@ -641,12 +672,15 @@ Note: Don't use pointer everywhere
 - Create sparse matrices
 
 ``` python
+import taichi as ti
+ti.init(arch=ti.cpu) # SparseMatrix only supports CPU for now.
+
 n = 4
 # step 1: create sparse matrix builder
-K = ti.SparseMatrixBuilder(n, n, max_num_triplets=100)
+K = ti.linalg.SparseMatrixBuilder(n, n, max_num_triplets=100)
 
 @ti.kernel
-def fill(A: ti.sparse_matrix_builder()):
+def fill(A: ti.linalg.sparse_matrix_builder()):
     for i in range(n):
         A[i, i] += i
 
@@ -655,11 +689,71 @@ fill(K)
 
 print(">>>> K.print")
 K.print_triplets()
+# n=4, m=4, num_triplets=4 (max=100)
+# (0, 0) val=0.0
+# (1, 1) val=1.0
+# (2, 2) val=2.0
+# (3, 3) val=3.0
 
 # step 3: create a sparse matrix
-
 A = K.build()
 print(">>>> A.print")
 print(A)
+# [0, 0, 0, 0]
+# [0, 1, 0, 0]
+# [0, 0, 2, 0]
+# [0, 0, 0, 3]
+
 ```
 
+#### Operator
+- `+`, `-`, `*`, `@`, `transpose`
+- element access: `A[i, j]`
+
+#### Solver
+``` python
+import taichi as ti
+
+ti.init(arch=ti.x64)
+
+n = 4
+
+K = ti.linalg.SparseMatrixBuilder(n, n, max_num_triplets=100)
+b = ti.field(ti.f32, shape=n)
+
+@ti.kernel
+def fill(A: ti.linalg.sparse_matrix_builder(), b: ti.template(), interval: ti.i32):
+    for i in range(n):
+        A[i, i] += 2.0
+
+        if i % interval == 0:
+            b[i] += 1.0
+
+fill(K, b, 3)
+
+A = K.build()
+print(">>>> Matrix A:")
+print(A)
+print(">>>> Vector b:")
+print(b)
+# outputs:
+# >>>> Matrix A:
+# [2, 0, 0, 0]
+# [0, 2, 0, 0]
+# [0, 0, 2, 0]
+# [0, 0, 0, 2]
+# >>>> Vector b:
+# [1. 0. 0. 1.]
+solver = ti.linalg.SparseSolver(solver_type="LLT")
+solver.analyze_pattern(A)
+solver.factorize(A)
+x = solver.solve(b)
+isSuccess = solver.info()
+print(">>>> Solve sparse linear systems Ax = b with the solution x:")
+print(x)
+print(f">>>> Computation was successful?: {isSuccess}")
+# outputs:
+# >>>> Solve sparse linear systems Ax = b with the solution x:
+# [0.5 0.  0.  0.5]
+# >>>> Computation was successful?: True
+```
