@@ -508,3 +508,158 @@ class TaichiWheel:
         # ...
 ```
 
+### Dense Computation
+
+In GPU, the time complexity for data-access is much greater than the computation, this is different from CPU.
+- store data in a memory-access-friendly way
+#### Upgrade `ti.field()`
+- `ti.root`: the root of a Structural Node Tree
+``` python
+x = ti.Vector.field(3, ti.f32, shape = 16)
+# |
+# |
+x = ti.Vector.field(3, ti.f32)
+ti.root.dense(ti.i, 16).place(x)
+
+
+x = ti.field(ti.i32, shape=(4, 4))
+# |
+# |
+x = ti.field(ti.i32)
+ti.root.dense(ti.ij, (4, 4)).place(x)
+# |
+# |
+x = ti.field(ti.i32)
+ti.root.dense(ti.i, 4).dense(ti.j, 4).place(x) # row-major
+y = ti.field(ti.i32)
+ti.root.dense(ti.j, 4).dense(ti.i, 4).place(x) # column-major
+
+# access automatically 
+@ti.kernel
+def fill():
+    for i, j in x:
+        x[i, j] = 1
+
+
+@ti.kernel
+def print_field():
+    for i, j in x：
+        print("x[", i, ", ", j, "] = ", x[i, j], sep="", end=" ")
+```
+#### Hierarchical 1D field
+``` python
+import taichi as ti
+ti.init(arch=ti.cpu, cpu_max_num_threads=8)
+
+x = ti.field(ti.i32)
+ti.root.dense(ti.i, 4).dense(ti.i, 4).place(x)
+
+@ti.kernel
+def print_id():
+    for i in x:
+        print(i, end = " ")
+print_id()
+# first output
+# 0 1 2 3 8 9 10 11 4 5 6 7 12 13 14 15
+# second output
+# 8 9 10 11 0 1 2 3 12 13 14 15 4 5 6 7 
+# third output
+# 0 1 2 3 4 5 6 7 12 13 14 15 8 9 10 11
+```
+
+#### Block access
+
+``` python
+x = ti.field(ti.i32)
+ti.root.dense(ti.ij, (2, 2)).dense(ti.ij, (2, 2)).place(x)
+```
+In the following case, if the data layout is block, then the data you need is much likely to be in the memory. Therefore speed up the algorithm.
+
+![](imgs/2022-02-09-20-39-44.png)
+#### AoS vs. SoA
+``` c++
+// Structure of arrays(SoA)
+struct S1
+{
+    int x[8];
+    int y[8]
+}
+S1 soa;
+
+// Array of Structure
+struct S2
+{
+    int x;
+    int y;
+}
+S2 aos[8];
+
+```
+![](imgs/2022-02-09-20-38-27.png)
+
+The speed of memory access is dependent on how you use data.
+
+In Taichi
+
+``` python
+# SoA
+x = ti.field(ti.i32)
+y = ti.field(ti.i32)
+ti.dense(ti.i, 8).place(x)
+ti.dense(ti.i, 8).place(x)
+
+# address: low ............................ high
+#          x[0] x[1] ... x[7] y[0] y[1] ... y[7]
+
+
+# AoS 
+x = ti.field(ti.i32)
+y = ti.field(ti.i32)
+ti.root.dense(ti.i, 8).place(x, y)
+
+# address: low ........................ high
+#          x[0] y[0] x[1] y[1] ... x[7] y[7]
+
+# even field with different shape
+x = ti.field(ti.i32)
+y = ti.Vector.field(2, ti.i32)
+ti.root.dense(ti.i, 8).place(x, y)
+# address: low .................................... high
+#          x[0] y[0, 0] y[0, 1] ... x[7] y[7, 0] y[7, 1]
+```
+### Sparse Computation
+
+Note: Don't use pointer everywhere
+- `ti.f32` -> 32 bits
+- taichi pointer -> 64 bits
+
+### Sparse Matrix
+#### Build a sparse matrix
+
+- create a builder using `ti.SparseMatrixBuilder()`
+- Fill the builder
+- Create sparse matrices
+
+``` python
+n = 4
+# step 1: create sparse matrix builder
+K = ti.SparseMatrixBuilder(n, n, max_num_triplets=100)
+
+@ti.kernel
+def fill(A: ti.sparse_matrix_builder()):
+    for i in range(n):
+        A[i, i] += i
+
+# step 2: fill the number
+fill(K)
+
+print(">>>> K.print")
+K.print_triplets()
+
+# step 3: create a sparse matrix
+
+A = K.build()
+print(">>>> A.print")
+print(A)
+```
+
