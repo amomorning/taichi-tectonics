@@ -18,7 +18,7 @@ dx = 1      # finite difference step size (in space)
 # heat-source related
 t_max = 300 # max temperature (in Celsius)
 t_min = 0   # min temperature 
-heat_center = (n//2, n//2) 
+heat_center = (n//4, n//2) 
 heat_radius = 5.1
 k = 4000.0 # rate of heat diffusion
 
@@ -39,6 +39,7 @@ ind = lambda i, j: i*n+j
 @ti.kernel
 def fillDiffusionMatrixBuilder(A: ti.linalg.sparse_matrix_builder()):
     for i,j in ti.ndrange(n, n):
+
         count = 0
         if i-1 >= 0:
             A[ind(i,j), ind(i-1,j)] += 1
@@ -62,6 +63,7 @@ def fillEyeMatrixBuilder(A: ti.linalg.sparse_matrix_builder()):
 def buildMatrices():
     fillDiffusionMatrixBuilder(D_builder)
     fillEyeMatrixBuilder(I_builder)
+
     D = D_builder.build()
     I = I_builder.build()
     return D, I
@@ -79,8 +81,12 @@ def init():
 @ti.kernel
 def update_source():
     for i,j in ti.ndrange(n, n):
+
         if (float(i)-heat_center[0])**2 + (float(j)-heat_center[1])**2 <= heat_radius**2:
             t_np1[ind(i, j)] = t_max
+        
+        if(ti.abs(i - 2*n//3) < 2 and ti.abs(j - n//2) < 12):
+            t_np1[ind(i, j)] = t_min
 
 def diffuse(dt: ti.f32):
     c = dt * k / dx**2
@@ -129,6 +135,7 @@ def temperature_to_color(t: ti.template(), color: ti.template(), tmin: ti.f32, t
     for i,j in ti.ndrange(n, n):
         for k,l in ti.ndrange(scatter, scatter):
             color[i*scatter+k,j*scatter+l] = get_color(t[ind(i,j)], tmin, tmax)
+            
 
 # GUI
 my_gui = ti.GUI("Diffuse", (res, res))
