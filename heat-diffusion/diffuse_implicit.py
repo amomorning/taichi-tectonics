@@ -16,11 +16,11 @@ h = 1e-3    # time-step size
 substep = 1 # number of substeps
 dx = 1      # finite difference step size (in space)
 # heat-source related
-t_max = 300 # max temperature (in Celsius)
+t_max = 100 # max temperature (in Celsius)
 t_min = 0   # min temperature 
-heat_center = (n//4, n//2) 
+heat_center = (n//3, n//2) 
 heat_radius = 5.1
-k = 4000.0 # rate of heat diffusion
+k = 5000.0 # rate of heat diffusion
 
 # visualization
 pixels = ti.Vector.field(3, ti.f32, shape = (res, res))
@@ -78,15 +78,21 @@ def init():
             t_n[ind(i, j)] = t_min
             t_np1[ind(i, j)] = t_min
 
-@ti.kernel
-def update_source():
-    for i,j in ti.ndrange(n, n):
 
+
+
+@ti.kernel
+def update_source(cur:float):
+    for i,j in ti.ndrange(n, n):
         if (float(i)-heat_center[0])**2 + (float(j)-heat_center[1])**2 <= heat_radius**2:
             t_np1[ind(i, j)] = t_max
-        
-        if(ti.abs(i - 2*n//3) < 2 and ti.abs(j - n//2) < 12):
-            t_np1[ind(i, j)] = t_min
+
+        if(ti.abs(i - n//2) < 2 and ti.abs(j - n//2) > 12):
+            t_np1[ind(i, j)] *= (0.8+cur)
+
+        if(ti.abs(i - 3*n//4) < 2 and ti.abs(j - n//2) < 12):
+            t_np1[ind(i, j)] *= (0.8+cur)
+
 
 def diffuse(dt: ti.f32):
     c = dt * k / dx**2
@@ -100,9 +106,12 @@ def diffuse(dt: ti.f32):
     # linear solve: solve
     t_np1.from_numpy(solver.solve(t_n)) # t_np1 = t_n + c*D*t_np1
 
+t = ti.field(dtype=int, shape=1)
 
 def update_source_and_commit():
-    update_source()
+    cur = min(t[0]/k, 0.2)
+    # print(cur)
+    update_source(cur)
     t_n.copy_from(t_np1)
 
 @ti.func
@@ -145,6 +154,7 @@ init()
 D,I = buildMatrices()
 
 i = 0
+t[0] = 0
 while my_gui.running:
 
     for e in my_gui.get_events(ti.GUI.PRESS):
@@ -161,6 +171,7 @@ while my_gui.running:
 
     if not paused:
         for sub in range(substep):
+            t[0] += 1
             diffuse(h/substep)
             update_source_and_commit()
 
