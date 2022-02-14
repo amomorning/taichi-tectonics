@@ -12,6 +12,7 @@ def foo():
     v = ti.Vector([1, 2, 3])
     vf[0] = v
     print(vf[1])        # [0.000000, 0.000000, 0.000000]
+    print(vf[1][0])
 
 foo()
 
