@@ -4,28 +4,11 @@ ti.init(arch=ti.gpu)
 n = 800
 pixels = ti.Vector.field(3, dtype=float, shape=(2*n, n))
 c = ti.Vector.field(2, dtype=float, shape=1)
+num = ti.field(dtype=int, shape=1)
 
 @ti.func
 def complex_sqr(z):
     return ti.Vector([z[0]**2 - z[1]**2, z[1] * z[0] * 2])
-
-
-@ti.kernel
-def paint(t: float):
-    for i, j in pixels:  # Parallelized over all pixels
-        c[0] = ti.Vector([-0.8, ti.cos(t) * 0.2])
-        z = ti.Vector([i / n - 1, j / n - 0.5]) * 2
-        iterations = 0
-        while z.norm() < 20 and iterations < 50:
-            z = complex_sqr(z) + c[0]
-            iterations += 1
-        # print(iterations)
-        if(iterations * 0.12 > 5.5):
-            pixels[i, j] = ti.Vector([0, 0, 0])
-        else:
-            rgb = hsv_to_rgb(iterations * 0.12, 0.7, 1)
-            pixels[i, j] = ti.Vector([rgb[0], rgb[1], rgb[2]])
-
 
 @ti.func
 def hsv_to_rgb(h: float, s: float, v: float) -> ti.Vector:
@@ -45,23 +28,36 @@ def hsv_to_rgb(h: float, s: float, v: float) -> ti.Vector:
 	elif i == 5: r, g, b = v, p, q
 	return ti.Vector([r, g, b])
 
-gui = ti.GUI("Julia Set", res=(2*n , n))
 
-i = 0
-pause = False
+@ti.kernel
+def paint(iter: int):
+    num[0] = iter
+    for i, j in pixels: 
+        c[0] = ti.Vector([i/n-1.2, j/n-0.5])*2.5
+        z = c[0]
+        iterations = 0
+        while(z.norm() < 20 and iterations < num[0]):
+            z = complex_sqr(z) + c[0]
+            iterations += 1
+
+        if(iterations == num[0]):
+            pixels[i, j] = ti.Vector([0, 0, 0])
+        else:
+            rgb = hsv_to_rgb(iterations * 0.12, 0.7, 1)
+            pixels[i, j] = ti.Vector([rgb[0], rgb[1], rgb[2]])
+
+
+gui = ti.GUI("Mandelbrot", res=(2*n , n))
+iter = gui.slider('Iterations', 5, 120, step=1)
+iter.value = 100
+
 while gui.running:
 
-    if not pause:
-        i += 1
-        paint(i * 0.03)
+    paint(int(iter.value))
     
     gui.set_image(pixels)
     gui.text(content=f"Space: pause", pos=(0.01, 0.98), color=0x0)
     gui.text(content=f"c = %.2f + %.2fi"%(c[0][0], c[0][1]), pos=(0.01, 0.95), color=0x0)
-    for e in gui.get_events(gui.PRESS):
-        if e.key == gui.ESCAPE:
-            gui.running = False
-        elif e.key == gui.SPACE:
-            pause = not pause
+    gui.text(content=f"iterations = %d"%(num[0]), pos=(0.01, 0.92), color=0x0)
 
     gui.show()
