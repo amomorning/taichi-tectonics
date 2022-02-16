@@ -1,10 +1,10 @@
 import taichi as ti
-ti.init(arch=ti.gpu)
+ti.init(arch=ti.cpu)
 
-# ruleset = [0, 0, 0, 1, 1, 1, 1, 0] # rule 30
+ruleset = [0, 0, 0, 1, 1, 1, 1, 0] # rule 30
 # ruleset = [0, 1, 0, 0, 1, 0, 0, 1] # rule 73
 # ruleset = [0, 1, 0, 1, 1, 0, 1, 0] # rule 90
-ruleset = [1, 0, 0, 1, 1, 0, 1, 0] # rule 154
+# ruleset = [1, 0, 0, 1, 1, 0, 1, 0] # rule 154
 
 cell_size = 4
 n = 300
