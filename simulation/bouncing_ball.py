@@ -20,7 +20,7 @@ class Ball:
     def initialize(self, i:int, x:int, y:int, radius:float):
         self.radius[i] = radius
         self.pos[i] = ti.Vector([x, y])
-        self.v[i] = ti.Vector([ti.random(dtype=float), ti.random(dtype=float)])-0.5
+        self.v[i] = (ti.Vector([ti.random(dtype=float), ti.random(dtype=float)])-0.5)
         self.v[i] /= self.v[i].norm()
         self.color[i] = 0xffffff
         
@@ -41,25 +41,16 @@ class Ball:
         for i in range(self.N):
 
             for j in range(i):
-                if((self.pos[i] - self.pos[j]).norm() < self.radius[i] + self.radius[j]):
-                    # dv = (self.pos[j] - self.pos[i]) / (self.pos[j] - self.pos[i]).norm()
+                if((self.pos[i] - self.pos[j]).norm() < self.radius[i] + self.radius[j]+0.01):
+                    self.pos[i] += 0.1 * (self.pos[i] - self.pos[j])
+
                     t = self.v[i]
                     self.v[i] = self.v[j]
                     self.v[j] = t
-                    self.color[i] = 0x000000
-                    self.color[j] = 0x000000
+                    self.color[i] = 0x222222
+                    self.color[j] = 0x222222
                     # self.v[i] /= self.v[i].norm()
                     break
-                
-                # if((self.pos[i] - self.pos[j]).norm() < self.radius[i] + self.radius[j] + 1):
-                #     flag = True
-                #     t = self.v[i] 
-                #     self.v[i] = self.v[j] 
-                #     self.v[j] = t
-                #     self.color[i] = 0xff0000
-                #     self.color[j] = 0xff0000
-                #     break
-
 
 
 
@@ -101,8 +92,10 @@ def draw():
             pos = balls.pos[k]
             t = circle(pos, ti.Vector([i, j]), balls.radius[k])
             c += ti.Vector(ti.hex_to_rgb(balls.color[k])) * t
+            if(c[0] > 1.0):
+                c = ti.Vector([1.0, 1.0, 1.0])
 
-        pixels[i, j] = c*0.8
+        pixels[i, j] = c
 
 
 while gui.running:
