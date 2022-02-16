@@ -50,7 +50,12 @@ gui.fps_limit=15
 
 pause = False
 init()
-while gui.running:
+
+result_dir = "./results"
+video_manager = ti.VideoManager(output_dir=result_dir, framerate=24, automatic_build=True)
+
+
+for _ in range(200):
     for e in gui.get_events(gui.PRESS, gui.MOTION):
         if e.key == gui.ESCAPE:
             gui.running = False
@@ -62,5 +67,9 @@ while gui.running:
     if not pause:
         run()
 
-    gui.set_image(ti.imresize(alive, img_size).astype(np.uint8) * 255)
-    gui.show()
+    pixels_img = ti.imresize(alive, img_size).astype(np.uint8) * 255
+    video_manager.write_frame(pixels_img)
+    # gui.set_image(ti.imresize(alive, img_size).astype(np.uint8) * 255)
+    # gui.show()
+
+video_manager.make_video(gif=True, mp4=True)

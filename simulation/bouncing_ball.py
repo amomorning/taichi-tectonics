@@ -2,12 +2,10 @@ import taichi as ti
 from random import randint
 ti.init(arch=ti.gpu)
 
-bg = ti.field(dtype=int, shape=2)
-bg[0], bg[1] = 1600, 800
-N = 30
+N = 500
+w, h = 1600, 800
+pixels = ti.Vector.field(3, dtype=float, shape=(w, h))
 
-def dist(a, b):
-    return ti.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
 @ti.data_oriented
 class Ball:
@@ -27,17 +25,17 @@ class Ball:
         self.color[i] = 0xffffff
         
 
-    @ti.kernel
+    @ti.func
     def update(self, rate: ti.f32):
 
         for i in range(self.N):
             self.pos[i] += self.v[i] * rate
             self.color[i] = 0xffffff
 
-            if(self.pos[i][0] > bg[0] or self.pos[i][0] < 0):
+            if(self.pos[i][0] > w or self.pos[i][0] < 0):
                 self.v[i][0] = - self.v[i][0]
 
-            if(self.pos[i][1] > bg[1] or self.pos[i][1] < 0):
+            if(self.pos[i][1] > h or self.pos[i][1] < 0):
                 self.v[i][1] = - self.v[i][1]
 
         for i in range(self.N):
@@ -48,8 +46,8 @@ class Ball:
                     t = self.v[i]
                     self.v[i] = self.v[j]
                     self.v[j] = t
-                    self.color[i] = 0x222222
-                    self.color[j] = 0x222222
+                    self.color[i] = 0x000000
+                    self.color[j] = 0x000000
                     # self.v[i] /= self.v[i].norm()
                     break
                 
@@ -63,29 +61,56 @@ class Ball:
                 #     break
 
 
-    def getBall(self, i: int):
-        return self.pos[i][0], self.pos[i][1], self.radius[i], self.color[i]
-
-        
 
 
-gui = ti.GUI("Bouncing Ball", res=(bg[0] , bg[1]))
+gui = ti.GUI("Bouncing Ball", res=(w , h))
 
 balls = Ball(N)
 
 for i in range(N):
-    balls.initialize(i, randint(10, bg[0]-10), randint(10, bg[1]-10), randint(2, 10))
+    balls.initialize(i, randint(10, w-10), randint(10, h-10), randint(2, 10))
     # print(balls.getBall(i))
+@ti.func
+def clamp(v, v_min, v_max):
+    return ti.min(ti.max(v, v_min), v_max)
+
+@ti.func
+def smoothstep(edge1, edge2, v):
+    assert(edge1 != edge2)
+    t = (v-edge1) / float(edge2-edge1)
+    t = clamp(t, 0.0, 1.0)
+
+    return (3-2 * t) * t**2
 
 
+@ti.func
+def circle(pos, center, radius):
+    dist = (pos - center).norm()
+    ret = 0.0
+    ret = smoothstep(1.0, 0.8, dist/radius)
+    return ret
 
+
+@ti.kernel
 def draw():
     balls.update(2)
-    for i in range(N):
-        x, y, r, c = balls.getBall(i)
-        gui.circle((x/bg[0], y/bg[1]), radius=r, color=c)
+    alpha = 0.1
+    for i, j in pixels:
+        c = ti.Vector([0.0, 0.0, 0.0])*alpha + pixels[i, j] *(1-alpha) 
+        for k in range(N):
+            pos = balls.pos[k]
+            t = circle(pos, ti.Vector([i, j]), balls.radius[k])
+            c += ti.Vector(ti.hex_to_rgb(balls.color[k])) * t
+
+        pixels[i, j] = c*0.8
+
 
 while gui.running:
+    for e in gui.get_events(gui.PRESS, gui.MOTION):
+        if e.key == 's':
+            ti.imwrite(pixels, 'result.png')
+
     draw()
+    gui.set_image(pixels)
     gui.show()
 

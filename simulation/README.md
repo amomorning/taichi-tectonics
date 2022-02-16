@@ -1,4 +1,6 @@
 
+### Bouncing Ball
+![](imgs/Bouncing-Ball.png)
 ### Elementary Cellular Automata
 
 #### Rule 30
@@ -9,3 +11,6 @@
 ![](imgs/CA-RULE90.png)
 #### Rule 154 
 ![](imgs/CA-RULE154.png)
+
+### Game of Life 
+![](imgs/game-of-life.gif)
