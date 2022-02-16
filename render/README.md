@@ -82,3 +82,59 @@ $$ L_{o}=L_{e}+\int_{\Omega} L_{i} \cdot f_{r} \cdot \cos \theta \cdot d \omega 
   - The rest of your life
 - GAMES 101
 - GAMES 102
+
+
+## Ray tracing in action
+
+### Ray casting
+#### 1. Ray
+- $ P=0+t \overrightarrow{\boldsymbol{d}} $
+![](imgs/2022-02-16-22-21-55.png)
+#### 2. Positioning the camera/eye (lookfrom)
+![](imgs/2022-02-16-22-23-09.png)
+#### 3. Orienting the camera/eye (lookat)
+![](imgs/2022-02-16-22-23-40.png)
+#### 4. Placing the screen
+1. `distance` from the eye to the center of the screen
+2. orientation `up` of the screen
+
+![](imgs/2022-02-16-22-24-33.png)
+#### 5. Sizing the screen (field of view)
+![](imgs/2022-02-16-22-26-17.png)
+- `fov`: field of view $\theta$
+- `aspect_ration`
+
+![](imgs/2022-02-16-22-27-09.png)
+
+![](imgs/2022-02-16-22-27-55.png)
+![](imgs/2022-02-16-22-28-19.png)
+#### 6. Ray Casting!!
+
+![](imgs/2022-02-16-22-28-55.png)
+
+ray across the center of a pixel
+``` Python
+u = float(i+0.5)/res_x
+v = float(j+0.5)/res_y
+```
+### Ray-object intersection
+![](imgs/2022-02-16-22-14-04.png)
+#### Sphere
+- $\|P-C\|^{2}-r^{2}=0$
+![](imgs/2022-02-16-22-15-44.png)
+- $a t^{2}+b t+c=0 \Rightarrow t=\frac{-b \pm \sqrt{b^{2}-4 a c}}{2 a}, t>\epsilon $
+- for instance, $\epsilon = 0.001$
+![](imgs/2022-02-16-22-16-12.png)
+
+#### Plane
+- $ (P-C)^{T} N=0 $
+![](imgs/2022-02-16-22-18-10.png)
+
+- $(O+t \overrightarrow{\boldsymbol{d}}-C)^{T} N=0$
+![](imgs/2022-02-16-22-19-08.png)
+
+#### Triangle
+1. intersect with triangle plane
+2. inside the triangle
+
+![](imgs/2022-02-16-22-20-12.png)
