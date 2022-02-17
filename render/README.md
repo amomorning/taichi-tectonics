@@ -88,7 +88,8 @@ $$ L_{o}=L_{e}+\int_{\Omega} L_{i} \cdot f_{r} \cdot \cos \theta \cdot d \omega 
 
 ### Ray casting
 #### 1. Ray
-- $ P=0+t \overrightarrow{\boldsymbol{d}} $
+- $P=0+t \overrightarrow{\boldsymbol{d}}$
+
 ![](imgs/2022-02-16-22-21-55.png)
 #### 2. Positioning the camera/eye (lookfrom)
 ![](imgs/2022-02-16-22-23-09.png)
@@ -121,16 +122,20 @@ v = float(j+0.5)/res_y
 ![](imgs/2022-02-16-22-14-04.png)
 #### Sphere
 - $\|P-C\|^{2}-r^{2}=0$
+
 ![](imgs/2022-02-16-22-15-44.png)
-- $a t^{2}+b t+c=0 \Rightarrow t=\frac{-b \pm \sqrt{b^{2}-4 a c}}{2 a}, t>\epsilon $
+  $$ a t^{2}+b t+c=0 \Rightarrow t=\frac{-b \pm \sqrt{b^{2}-4 a c}}{2 a}, t>\epsilon $$
 - for instance, $\epsilon = 0.001$
+
 ![](imgs/2022-02-16-22-16-12.png)
 
 #### Plane
-- $ (P-C)^{T} N=0 $
+- $(P-C)^{T} N=0$
+
 ![](imgs/2022-02-16-22-18-10.png)
 
 - $(O+t \overrightarrow{\boldsymbol{d}}-C)^{T} N=0$
+
 ![](imgs/2022-02-16-22-19-08.png)
 
 #### Triangle
@@ -138,3 +143,27 @@ v = float(j+0.5)/res_y
 2. inside the triangle
 
 ![](imgs/2022-02-16-22-20-12.png)
+
+### Sampling
+#### Importance Sampling
+![](imgs/2022-02-17-10-14-42.png)
+
+### Reflection and Refraction
+
+#### The reflection coeffient: $R$
+- The refraction coefficient $T = 1- R$
+- material dependent
+- view point dependent
+
+##### Fresnel's Equation
+- s-polarization 
+  $$R_{S}=\left(\frac{n_{1} \cos \left(\theta_{i}\right)-n_{2} \cos \left(\theta_{t}\right)}{n_{1} \cos \left(\theta_{i}\right)+n_{2} \cos \left(\theta_{t}\right)}\right)^{2}$$
+- P-polarization 
+  $$R_{P}=\left(\frac{n_{1} \cos \left(\theta_{t}\right)-n_{2} \cos \left(\theta_{i}\right)}{n_{1} \cos \left(\theta_{t}\right)+n_{2} \cos \left(\theta_{i}\right)}\right)^{2}$$
+- For "natural light" 
+  $$R=\frac{1}{2}\left(R_{S}+R_{P}\right)$$
+
+##### Schlick's approximation
+$$R\left(\theta_{i}\right)=R_{0}+\left(1-R_{0}\right)\left(1-\cos \left(\theta_{i}\right)\right)^{5}$$
+$$R_{0}=\left(\frac{n_{1}-n_{2}}{n_{1}+n_{2}}\right)^{2}$$
+
