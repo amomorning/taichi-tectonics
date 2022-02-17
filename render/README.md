@@ -167,3 +167,8 @@ v = float(j+0.5)/res_y
 $$R\left(\theta_{i}\right)=R_{0}+\left(1-R_{0}\right)\left(1-\cos \left(\theta_{i}\right)\right)^{5}$$
 $$R_{0}=\left(\frac{n_{1}-n_{2}}{n_{1}+n_{2}}\right)^{2}$$
 
+### Result
+
+![](imgs/color-only-result.png)
+
+![](imgs/path-tracing-result.png)

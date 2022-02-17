@@ -66,4 +66,8 @@ if __name__ == '__main__':
         render()
         cnt += 1
         gui.set_image(np.sqrt(pixels.to_numpy() / cnt))
+
+        for e in gui.get_events(gui.PRESS):
+            if e.key == 's':
+                ti.imwrite(np.sqrt(pixels.to_numpy() / cnt), 'result.png')
         gui.show()
