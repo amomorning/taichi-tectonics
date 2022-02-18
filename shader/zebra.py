@@ -5,7 +5,7 @@ import numpy as np
 
 ti.init(arch=ti.gpu)
 
-res_x, res_y = 800, 450
+res_x, res_y = 1080, 720
 
 pixels = ti.Vector.field(3, dtype=float, shape=(res_x, res_y))
 
@@ -29,7 +29,7 @@ gui = ti.GUI("Zebra Valley", (res_x, res_y))
 pixels.fill(0)
 t = 0.
 while gui.running:
-    t += 0.01
+    t += 0.02
     render(t)
     gui.set_image(pixels)
     # print(pixels[0, 0])

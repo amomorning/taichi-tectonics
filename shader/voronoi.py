@@ -35,7 +35,7 @@ def voronoi(p, t):
 
             d = (g-f+o).norm()
 
-            col = 0.5 + 0.5*ti.sin(hash1((n+g).dot(ti.Vector([7., 113.]))) *2.5 + 3.5 + ti.Vector([2.7+t, 2.2-t, 1.5]))
+            col = 0.5 + 0.5*ti.sin(hash1((n+g).dot(ti.Vector([7., 113.]))) *2.5 + 3.5 + ti.Vector([2.7+t%6.3, 2.2-t%6.3, 1.5]))
             h = hsf.smoothstep(0.0, 1.0, 0.5+0.5*(m[0] - d) / w)
             m[0] = hsf.mix(m[0], d, h) - h * (1.0 - h) * w/(1.0+3.0*w)
             m[1] = hsf.mix(m[1], col[0], h) - h * (1.0 - h) * w/(1.0+3.0*w)
@@ -54,12 +54,6 @@ def render(t: ti.f32):
 
         col = ti.sqrt(ti.Vector([v[1], v[2], v[3]]))
 
-        # col *= 1.0 - 0.8*v[0]*hsf.step(p[1], 5.)
-        # col *= hsf.mix(v[0], 1.0, hsf.step(p[1], 0.33))
-
-        # col *= hsf.smoothstep(0.003, 0.005, ti.abs(p[1] - 0.33))
-        # col *= hsf.smoothstep(0.003, 0.005, ti.abs(p[1] - 0.66))
-
         pixels[i, j] = col
         
 
@@ -71,4 +65,5 @@ while gui.running:
     t += 0.03
     render(t)
     gui.set_image(pixels)
+    # gui.text(content=f"t = %.2f"%(t), pos=(0.01, 0.95), color=0x0)
     gui.show()
