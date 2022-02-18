@@ -43,3 +43,7 @@ def fract(vec):
 def mod(x, y):
     #return x - y * ti.floor(x/y)
     return x % y # mod between floating points are supported now, you can use x % y directly.
+
+@ti.func
+def mix(x, y, a):
+    return x * (1-a) + y * a
