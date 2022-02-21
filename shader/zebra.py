@@ -27,10 +27,20 @@ def render(t: ti.f32):
 gui = ti.GUI("Zebra Valley", (res_x, res_y))
 
 pixels.fill(0)
+# t = 0.
+# while gui.running:
+#     t += 0.02
+#     render(t)
+#     gui.set_image(pixels)
+#     # print(pixels[0, 0])
+#     gui.show()
+
+
+# export video
 t = 0.
-while gui.running:
+vm = ti.VideoManager('./results', automatic_build=False)
+for i in range(350):
     t += 0.02
     render(t)
-    gui.set_image(pixels)
-    # print(pixels[0, 0])
-    gui.show()
+    pixel_img = pixels.to_numpy()
+    vm.write_frame(pixel_img)
