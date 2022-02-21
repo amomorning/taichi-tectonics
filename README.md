@@ -1,17 +1,23 @@
 # taichi-techtonic
+
 Architectural Taichi Exploration
+
 ## Basic
 
 [[bilibili](https://space.bilibili.com/1779922645/channel/seriesdetail?sid=337716)] [[docs](https://docs.taichi.graphics)] [[forum](https://forum.taichi.graphics/)] [[API ref](https://api-docs.taichi.graphics)]
+
 ### Scope
+
 - Python Scope
 - Taichi Scope
   - decorator: `@ti.kernel` / `@ti.func`
   - taichi kernels can only be called from python scope
 
 #### For-loops in a Taichi Kernel
+
 - for loop at the outmost scope is **automatically parallelized**
 - break is NOT supported in the parallel for-loops
+
 ``` python
 @ti.kernel
 def fill():
@@ -53,6 +59,7 @@ def zot():
 ```
 
 #### Kernel arguments
+
 - at most 8 parameters
 - pass from the python scope to taichi scope
 - must be type-hinted
@@ -67,10 +74,12 @@ def good_kernel(vx: ti.f32, vy: ti.f32):
 ```
 
 **Passing arguments using `ti.template()`**
+
 - primary types: `ti.f32`, `ti.i32`, `ti.f64`, ...
 - compound types: `ti.Vector()`, `ti.Matrix()`, ..
 - fields: `ti.field()`, `ti.Vector.field()`, ...
 - taichi class: `@ti.data_oriented`
+
 ``` python
 @ti.kernel
 def foo(x: ti.template()):
@@ -80,6 +89,7 @@ def foo(x: ti.template()):
 a = ti.Vector([42, 3.14])
 foo(a)
 ```
+
 variables pass by reference but modify is not allowed
 
 **more general**, use `ti.grouped()`
@@ -97,7 +107,9 @@ def copy(x: ti.template(), y: ti.template()):
 
         x[I] = y[I]
 ```
+
 #### Kernel return value
+
 - may or may not return
 - return on single scalar value only
 - must be type-hinted
@@ -113,22 +125,25 @@ def my_kernel() -> ti.i32: # return int32
 print(my_kernel())
 # 233
 ```
+
 #### `@ti.func`
+
 - can only be called from taichi scope
-- can be nested 
+- can be nested
 - force-inline 强制内联，不支持递归
 - do not need to be type-hinted
 - pass by value
 
 ### Primitive types
+
 - signed integers: `ti.i8`, `ti.i16`, `ti.i32`, `ti.i64`
 - unsigned integers: `ti.u8`, `ti.u16`, `ti.u32`, `ti.u64`
 - floating points: `ti.f32`, `ti.f64`
 
-default: 
+default:
+
 - `ti.i32`
 - `ti.f32`
-
 
 ``` python
 # modify default types
@@ -139,10 +154,12 @@ ti.init(default_fp=ti.i64)
 #### type casts
 
 pick more precise type to store result:
+
 - i32 + f32 = f32
 - i32 + i64 = i64
 
-**implicit cast**
+##### implicit cast
+
 ``` python
 import taichi as ti
 ti.init(arch=ti.cpu)
@@ -167,7 +184,8 @@ def bar():
 bar()
 ```
 
-**variable = ti.cast(varible, type)**
+##### variable = ti.cast(varible, type)
+
 ``` python
 import taichi as ti
 ti.init(arch=ti.cpu)
@@ -186,6 +204,7 @@ zot()
 ### Compound Types
 
 #### Using `ti.types`
+
 - vector
 - matrix
 - struct
@@ -216,6 +235,7 @@ def foo():
 
 foo()
 ```
+
 #### Using `ti.Vector/Matrix/Struct`
 
 ``` python
@@ -241,11 +261,14 @@ bar()
 ```
 
 #### `ti.field`
+
 global N-d array elements
+
 - global: read/writen from python-scope and taichi-scope
 - N-d: Scalar: N=0, Vector: N=1, Matrix: N=2, (N=3,4,5...)
 - elements: scalar, vector, matrix, struct
 - use [i, j, k, ...] indexing
+
 ``` python
 import taichi as ti
 ti.init(arch=ti.cpu)
@@ -278,6 +301,7 @@ print(zero_d_vec[None]) # [1. 2. 3.]
 ### Operators
 
 #### Trigonometric functions
+
 ``` python
 ti.sin(x)
 ti.cos(x)
@@ -289,6 +313,7 @@ ti.tanh(x)
 ```
 
 #### Other arithmetic functions
+
 ``` python
 ti.sqrt(x)
 ti.rsqrt(x)  # A fast version for `1 / ti.sqrt(x)`.
@@ -301,6 +326,7 @@ ti.sum(x)
 ```
 
 #### Builtin alike
+
 ``` py
 abs(x)
 max(x, y, ...)
@@ -311,6 +337,7 @@ ti.random(dtype=float)
 ```
 
 #### Atomic Operations
+
 ``` python
 @ti.kernel
 def sum():
@@ -325,7 +352,8 @@ def sum():
         total[None] = total[None] + x[i]
 ```
 
-#### Matrix operation:
+#### Matrix operation
+
 ``` python
 B = ti.Matrix([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
 C = ti.Matrix([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]])
@@ -372,11 +400,12 @@ a@a             # @ denotes matrix multiplication
 ### GUI
 
 #### Print
+
 - print is parallelized..
 See more in `parallelized.py`
 
-#### GUI
-2D: `ti.GUI`
+#### 2D: `ti.GUI`
+
 - slow and 2D only
 
 ``` python
@@ -412,9 +441,9 @@ while gui.running:
 ```
 
 #### [GGUI](https://docs.taichi.graphics/zh-Hans/lang/articles/misc/ggui)
+
 - realtime rendering (GPU backend only)
   
-
 ``` python
 import taichi as ti
 ti.init(arch=ti.gpu)
@@ -454,9 +483,10 @@ while window.running:
     window.show()
 ```
 
-
 ### Taichi speed tricks
+
 #### Metaprogramming
+
 - Metaprogramming: treat other programs as their data
 
 #### `ti.static()`
@@ -485,7 +515,9 @@ def foo():
 # and will be serialized
 
 ```
+
 #### OOP
+
 ``` python
 @ti.data_oriented
 class TaichiWheel:
@@ -507,9 +539,13 @@ class TaichiWheel:
 ### Dense Computation
 
 In GPU, the time complexity for data-access is much greater than the computation, this is different from CPU.
+
 - store data in a memory-access-friendly way
+
 #### Upgrade `ti.field()`
+
 - `ti.root`: the root of a Structural Node Tree
+
 ``` python
 x = ti.Vector.field(3, ti.f32, shape = 16)
 # |
@@ -542,7 +578,9 @@ def print_field():
     for i, j in x：
         print("x[", i, ", ", j, "] = ", x[i, j], sep="", end=" ")
 ```
+
 #### Hierarchical 1D field
+
 ``` python
 import taichi as ti
 ti.init(arch=ti.cpu, cpu_max_num_threads=8)
@@ -569,10 +607,13 @@ print_id()
 x = ti.field(ti.i32)
 ti.root.dense(ti.ij, (2, 2)).dense(ti.ij, (2, 2)).place(x)
 ```
+
 In the following case, if the data layout is block, then the data you need is much likely to be in the memory. Therefore speed up the algorithm.
 
-![](imgs/2022-02-09-20-39-44.png)
+![block data](imgs/2022-02-09-20-39-44.png)
+
 #### AoS vs. SoA
+
 ``` c++
 // Structure of arrays(SoA)
 struct S1
@@ -591,7 +632,8 @@ struct S2
 S2 aos[8];
 
 ```
-![](imgs/2022-02-09-20-38-27.png)
+
+![SoA and AoS](imgs/2022-02-09-20-38-27.png)
 
 The speed of memory access is dependent on how you use data.
 
@@ -623,6 +665,7 @@ ti.root.dense(ti.i, 8).place(x, y)
 # address: low .................................... high
 #          x[0] y[0, 0] y[0, 1] ... x[7] y[7, 0] y[7, 1]
 ```
+
 ### Sparse Computation
 
 use pointer which present the head of the list, only activated when you give the cell value
@@ -650,17 +693,21 @@ ti.deactivate(x, [i, j, ...])
 x.deactivate_all()
 x.rescale_index() # 可以获得祖先节点的值
 ```
+
 Note: Don't use pointer everywhere
+
 - `ti.f32` -> 32 bits
 - taichi pointer -> 64 bits
 
 **Some examples:**
-![](imgs/2022-02-09-21-06-12.png)
-![](imgs/2022-02-09-21-06-25.png)
-![](imgs/2022-02-09-21-06-48.png)
+![block](imgs/2022-02-09-21-06-12.png)
+![block](imgs/2022-02-09-21-06-25.png)
+![block](imgs/2022-02-09-21-06-48.png)
 
 ### Sparse Matrix
+
 [API](https://docs.taichi.graphics/lang/articles/advanced/sparse_matrix)
+
 #### Build a sparse matrix
 
 - create a builder using `ti.SparseMatrixBuilder()`
@@ -703,10 +750,12 @@ print(A)
 ```
 
 #### Operator
+
 - `+`, `-`, `*`, `@`, `transpose`
 - element access: `A[i, j]`
 
 #### Solver
+
 ``` python
 import taichi as ti
 
@@ -754,18 +803,20 @@ print(f">>>> Computation was successful?: {isSuccess}")
 # >>>> Computation was successful?: True
 ```
 
-
 ### Debug
 
-#### Print
+#### `print`
 
-**Runtime print**
+##### Runtime print
+
 - print requires a system called
 
-**Static print**
+##### Static print
+
 - `ti.static_print(x)`
 
-**Visualize field**
+##### Visualize field
+
 ``` python
 x = ti.field(ti.f32, (256, 256))
 
@@ -781,8 +832,10 @@ while gui.running:
 ```
 
 #### Debug mode
+
 - open debug mode (default `False`)
 - use `assert` to trigger error
+
 ``` python
 ti.init(arch=ti.cpu, debug=True)
 
@@ -801,6 +854,7 @@ def do_sqrt_all():
 ``` python
 ti.init(arch=ti.cpu, cpu_max_num_threads=1)
 ```
+
 - Turn off advanced optimization (in case compiler omit your code)
 
 ``` python
@@ -808,14 +862,18 @@ ti.init(arch=ti.cpu, advanced_optimization=False)
 ```
 
 ### Profiling
+
 #### [Amdahl's Law](https://en.wikipedia.org/wiki/Amdahl's_law)
+
 theoretical speedup in latency of the execution of a task at fixed workload that can be expected of a system whose resources are improved.
 
-![](imgs/2022-02-09-22-00-12.png)
+![Amdahl's Law](imgs/2022-02-09-22-00-12.png)
 
 #### Taichi profiler
+
 - docs [[link](https://docs.taichi.graphics/lang/articles/misc/profiler)]
 - Performance tuning tips [[link](https://docs.taichi.graphics/lang/articles/advanced/performance)]
+
 ``` python
 # enable taichi's kernel profiler:
 ti.init(kernel_profiler=True, arch=ti.gpu)
@@ -826,5 +884,3 @@ ti.print_kernel_profile_info('count')
 # clear profiling info
 ti.clear_kernel_profile_info()
 ```
-
-
