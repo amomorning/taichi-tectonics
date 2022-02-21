@@ -3,7 +3,10 @@
 
 ![](imgs/Bouncing-Ball.png)
 
-https://github.com/amomorning/taichi-techtonic/blob/main/simulation/imgs/Bouncing-Ball.mp4
+
+https://user-images.githubusercontent.com/16810377/154906385-3d8f85bf-7376-4260-944d-ae1336289ca0.mp4
+
+
 
 ### Elementary Cellular Automata
 
