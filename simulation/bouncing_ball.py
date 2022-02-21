@@ -107,3 +107,10 @@ while gui.running:
     gui.set_image(pixels)
     gui.show()
 
+
+# export video
+# vm = ti.VideoManager('./results')
+# for i in range(500):
+#     draw()
+#     pixel_img = pixels.to_numpy()
+#     vm.write_frame(pixels.to_numpy())

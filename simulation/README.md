@@ -1,6 +1,10 @@
 
 ### Bouncing Ball
 ![](imgs/Bouncing-Ball.png)
+
+<video width="800" height="400" controls>
+  <source src="./imgs/Bouncing-Ball.mp4" type="video/mp4">
+</video>
 ### Elementary Cellular Automata
 
 #### Rule 30
