@@ -59,7 +59,7 @@ def render():
         u[i, j] = constrain(newu, 0.0, 1.0)
         v[i, j] = constrain(newv, 0.0, 1.0)
 
-        pixels[i, j] = hsv_to_rgb(3.3, 0.05, 0.12+0.7*u[i, j])
+        pixels[i, j] = hsv_to_rgb(2.7+u[i,j], 0.05+ 0.05*u[i, j], 0.02+0.78*u[i, j])
 
 
 gui = ti.GUI("Reaction diffusion", res)
