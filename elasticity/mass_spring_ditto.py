@@ -11,9 +11,9 @@ substepping = 100
 k = 10.
 h = 16.7e-3
 dh = h/substepping
-mass = 1.0
+mass = 10.0
 
-using_auto_diff = True
+using_auto_diff = False
 damping_toggle = ti.field(ti.i32, 1)
 
 total_energy = ti.field(ti.f32, (), needs_grad=True)
@@ -76,7 +76,6 @@ def compute_gradient():
         l = (vs[u] - vs[v]).norm()
         fs[v] += -(vs[u]-vs[v])*k*(l - l0[i])/l0[i]
         fs[u] += -(vs[v]-vs[u])*k*(l - l0[i])/l0[i]
-        
 
 @ti.kernel
 def compute_total_energy():
@@ -170,7 +169,7 @@ while gui.running:
         gui.circle((curser[0][0], curser[0][1]), radius=curser_radius*300, color=0xFF8888)
     
     gui.text("Space: pause", (0.1, 0.96), color=0xffffff)
-    gui.text("R: Initializing", (0.1, 0.93), color=0xffffff)
+    gui.text("R: Initialize", (0.1, 0.93), color=0xffffff)
     if(damping_toggle[0]):
         gui.text("D: Damping On", (0.1, 0.9), color=0xffffff)
     else:

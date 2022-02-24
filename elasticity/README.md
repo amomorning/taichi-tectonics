@@ -83,11 +83,96 @@ The energy is all we need!!!
 
 $$E\left(x_{1}, x_{2}\right)=\frac{1}{2} k\left(l-l_{0}\right)^{2}$$
 
-Gradient: 
+Gradient:
 $$\frac{\partial E}{\partial x_{1}}=\frac{\partial l}{\partial x_{1}} \cdot \frac{\partial E}{\partial l}=\frac{x_{1}-x_{2}}{l_{0}} * k\left(l-l_{0}\right)$$
 
 $$f(x_1)=-\frac{\partial E}{\partial x_{1}}$$
 
 $$f(x_2)=-f(x_1)$$
 
-![](imgs/2022-02-23-14-13-46.png)
+![img](imgs/2022-02-23-14-13-46.png)
+
+#### Linear Finite Element Method (FEM)
+
+##### Deformation map
+
+通常情况下，形变可以被描述为变换矩阵
+
+$$\phi(X) \approx \frac{\partial \phi}{\partial X}\left(X-X^{*}\right)+\phi\left(X^{*}\right)=\frac{\partial \phi}{\partial X} X+\left(\phi\left(X^{*}\right)-\frac{\partial \phi}{\partial X} X^{*}\right)$$
+可化简为：
+$$ \phi(X) \approx FX+t $$
+
+![map](imgs/2022-02-24-21-30-32.png)
+
+形变梯度：
+
+- $\phi:X\rightarrow x$
+- $F=\left[\begin{array}{ll} \partial x_{1} / \partial X_{1} & \partial x_{1} / \partial X_{2} \\ \partial x_{2} / \partial X_{1} & \partial x_{2} / \partial X_{1} \end{array}\right]$
+- $x \approx FX+t$
+
+刚体形变（平动、转动）与非刚体形变（挤压变形、拉拽剪切）可以带来非零的能量
+
+##### 能量密度 $\Psi(x)=\Psi(\phi(X))$
+
+- $\phi(X)\approx FX+t $，因此 $\Psi(x)=\Psi(FX+t)$
+- 能量对平动不敏感，如$\Psi(x)=\Psi(x+t)$，甚至对质点所在的位置 $X$都是不敏感的
+- 从而 $\Psi=\Psi(F)$
+
+Note: $\|A\|_{F}=\sqrt{\sum_{i, j} A_{i, j}^{2}}=\sqrt{\operatorname{tr}\left(A^{T} A\right)}$
+
+##### 应变张量 Strain(tensor): $\epsilon(F)$
+
+为了描述形变的旋转不变性和平移不变性(severity of deformation)，需要引入应变张量这一概念，$\epsilon(F)$满足如下两个条件：
+
+- $\epsilon(I)=0$
+- $\epsilon(F)=\epsilon(RF) \text{ for }  \forall R \in SO(dim) $
+
+以连续介质力学中的一些本构模型(constitutive models)为例：
+
+- St. Venant-Kirchhoff model: $\epsilon(F)=\frac{1}{2}(F^TF)-I$
+- Co-rotated linear model: $\epsilon(F)=S-I, \text{ where }F=RS$
+
+综上可以得到 $\Psi$：
+$$\Psi(\epsilon)=\mu\|\epsilon\|_{F}{ }^{2}+\frac{\lambda}{2} \operatorname{tr}(\epsilon)^{2}$$
+
+##### 空间积分
+
+对空间积分需要引入 FEM ，其中 Linear Element 表示相同区块内变形是一个常数。
+![map](imgs/2022-02-24-22-04-26.png)
+
+- 连续空间
+  $$E(x)=\int_{\Omega} \Psi(F(x)) d X$$
+- 离散空间
+  $$E(x)=\sum_{e_{i}} \int_{\Omega_{\mathrm{e}_{i}}} \Psi\left(F_{i}(x)\right) d X=\sum_{e_{i}} w_{i} \Psi\left(F_{i}(x)\right)$$
+  - $w_i=\int_{\Omega_{\mathrm{e}_{i}}}dX$: size(area/volume) of the i-th element
+
+$$\text{能量密度} \times \text{体积} = 能量$$
+
+对于每个线性有限元，其形变前的$X$与受力$F$形变后的$x$之间又如下关系：
+![img](imgs/2022-02-24-22-15-53.png)
+$$\begin{aligned}
+&x_1=FX_1+t \\
+&x_2=FX_2+t \\
+&x_3=FX_3+t \\
+&x_4=FX_4+t
+\end{aligned}$$
+做差分后可得：
+$$[\begin{array}{ll} x_1-x_4 & x_2-x_4 & x_3-x_4 \end{array}] = F[\begin{array}{ll} X_1-X_4 & X_2-X_4 & X_3-X_4 \end{array}]$$
+即：
+$$F=D_sD_m^{-1}$$
+
+##### $\Psi(F(x))$ 的梯度
+
+链式法则：
+$$\frac{\partial \Psi}{\partial x}=\frac{\partial F}{\partial x}: \frac{\partial \Psi}{\partial F}$$
+
+##### 总结
+
+- Elastic energy: $E_i(x)=w_i\Psi(F_i(x))$
+- Gradient: $\frac{\partial E_i}{\partial x}=w_i\frac{\partial F_i}{\partial x}:P_i$
+
+##### Further Reading
+
+- Finite Element Method, Part I
+- Or using auto-diff in Taichi
+
