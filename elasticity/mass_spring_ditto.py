@@ -15,7 +15,7 @@ mass = 1.0
 
 using_auto_diff = True
 damping_toggle = ti.field(ti.i32, 1)
-damping_toggle[0] = 1
+
 total_energy = ti.field(ti.f32, (), needs_grad=True)
 
 def ordered(a, b): 
@@ -23,16 +23,19 @@ def ordered(a, b):
     else: return (b, a)
 
 # read file
+
 with open('elasticity/ditto.txt', 'r') as f:
     N, m = map(int, f.readline().split())
     vs = ti.Vector.field(2, ti.f32, N, needs_grad=True)
     ve = ti.Vector.field(2, ti.f32, N)
     fs = ti.Vector.field(2, ti.f32, N)
+    v_init = ti.Vector.field(2, ti.f32, N)
 
     for i in range(N):
         x, y, z = map(float, f.readline().split())
         vs[i] = (ti.Vector([x, y])+55)/120
         ve[i] = ti.Vector([0., 0.])
+        v_init[i] = (ti.Vector([x, y])+55)/120
     lst = []
     for i in range(m):
         a, b, c = map(int, f.readline().split())
@@ -55,6 +58,12 @@ with open('elasticity/ditto.txt', 'r') as f:
         es[i] = ti.Vector([u, v])
         l0[i] = (vs[u] - vs[v]).norm()
 
+
+@ti.kernel
+def initialize():
+    for i in range(N):
+        vs[i] = v_init[i]
+        ve[i] = ti.Vector([0., 0.])
 
 
 @ti.kernel
@@ -90,6 +99,15 @@ def update():
 
         ve[i] *= ti.exp(-dh*damping_toggle[0])
         vs[i] += dh * ve[i]
+    
+    # implicit
+    # for i in range(N):
+
+    #     if using_auto_diff:
+    #         vs[i] += dh*dh*vs.grad[i] / mass
+    #     else:
+    #         vs[i] += dh*dh * fs[i] /mass
+
 
 
     if picking[0]:
@@ -116,6 +134,8 @@ while gui.running:
             paused = not paused
         elif e.key =='d' or e.key == 'D':
             damping_toggle[0] = not damping_toggle[0]
+        elif e.key =='r' or e.key == 'R':
+            initialize()
 
     if gui.is_pressed(ti.GUI.LMB):
         curser[0] = gui.get_cursor_pos()
@@ -144,8 +164,15 @@ while gui.running:
         color = 0xffffff
         # if i == 0: color=0xffffff
         gui.circle((vs[i][0], vs[i][1]), radius=curser_radius*100, color=color)
-        # gui.text("(%.2f, %.2f)"%(ve[i][0]*1000., ve[i][1]*1000.), (vs[i][0], vs[i][1]), color=0xffff00)
+        # gui.text("(%.2f, %.2f)"%(ve[i][0]*res[0], ve[i][1]*res[1]), (vs[i][0], vs[i][1]), color=0xffff00)
 
     if picking[0]: 
         gui.circle((curser[0][0], curser[0][1]), radius=curser_radius*300, color=0xFF8888)
+    
+    gui.text("Space: pause", (0.1, 0.96), color=0xffffff)
+    gui.text("R: Initializing", (0.1, 0.93), color=0xffffff)
+    if(damping_toggle[0]):
+        gui.text("D: Damping On", (0.1, 0.9), color=0xffffff)
+    else:
+        gui.text("D: Damping Off", (0.1, 0.9), color=0xffffff)
     gui.show()
