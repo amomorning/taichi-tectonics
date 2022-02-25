@@ -8,10 +8,10 @@ curser = ti.Vector.field(2, ti.f32, 1)
 res = (800, 800)
 
 substepping = 100
-k = 10.
+k = 100.
 h = 16.7e-3
 dh = h/substepping
-mass = 10.0
+mass = 1.0
 
 using_auto_diff = False
 damping_toggle = ti.field(ti.i32, 1)
