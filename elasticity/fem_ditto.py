@@ -7,7 +7,7 @@ curser = ti.Vector.field(2, ti.f32, 1)
 curser_radius = 1.0/32
 
 
-substepping = 100
+substepping = 50
 m = 1.
 h = 16.7e-3
 dh = h/substepping

@@ -55,14 +55,14 @@ The energy is all we need!!!
 
 而弹性物体需要对连续介质进行空间的积分：
 
-### the spatial integration
+## Spatial integration
 
 空间积分基于两种离散化方式：
 
 - 弹簧质点系统
 - 线性有限元
 
-#### Mass spring system
+### Mass spring system
 
 1. 对连续介质进行离散化
 2. 将质量分布到顶点上得到质点
@@ -72,14 +72,14 @@ The energy is all we need!!!
 
 弹簧的存在使得物体发生形变时会有回到原来形状的趋势
 
-##### Define deformation
+#### Define deformation
 
 - spring current pose: $x_1, x_2$
 - spring current length: $l=\left\|x_1-x_2\right\|$
 - rest-length: $l_0$
 - deformation: $l-l_0$
 
-##### Hooke's Law
+#### Hooke's Law
 
 $$E\left(x_{1}, x_{2}\right)=\frac{1}{2} k\left(l-l_{0}\right)^{2}$$
 
@@ -92,9 +92,9 @@ $$f(x_2)=-f(x_1)$$
 
 ![img](imgs/2022-02-23-14-13-46.png)
 
-#### Linear Finite Element Method (FEM)
+### Linear Finite Element Method (FEM)
 
-##### Deformation map
+#### Deformation map
 
 通常情况下，形变可以被描述为变换矩阵
 
@@ -112,7 +112,7 @@ $$ \phi(X) \approx FX+t $$
 
 刚体形变（平动、转动）与非刚体形变（挤压变形、拉拽剪切）可以带来非零的能量
 
-##### 能量密度 $\Psi(x)=\Psi(\phi(X))$
+#### 能量密度 $\Psi(x)=\Psi(\phi(X))$
 
 - $\phi(X)\approx FX+t $，因此 $\Psi(x)=\Psi(FX+t)$
 - 能量对平动不敏感，如$\Psi(x)=\Psi(x+t)$，甚至对质点所在的位置 $X$都是不敏感的
@@ -120,7 +120,7 @@ $$ \phi(X) \approx FX+t $$
 
 Note: $\|A\|_{F}=\sqrt{\sum_{i, j} A_{i, j}^{2}}=\sqrt{\operatorname{tr}\left(A^{T} A\right)}$
 
-##### 应变张量 Strain(tensor): $\epsilon(F)$
+#### 应变张量 Strain(tensor): $\epsilon(F)$
 
 为了描述形变的旋转不变性和平移不变性(severity of deformation)，需要引入应变张量这一概念，$\epsilon(F)$满足如下两个条件：
 
@@ -135,7 +135,7 @@ Note: $\|A\|_{F}=\sqrt{\sum_{i, j} A_{i, j}^{2}}=\sqrt{\operatorname{tr}\left(A^
 综上可以得到 $\Psi$：
 $$\Psi(\epsilon)=\mu\|\epsilon\|_{F}{ }^{2}+\frac{\lambda}{2} \operatorname{tr}(\epsilon)^{2}$$
 
-##### 空间积分
+#### 空间积分
 
 对空间积分需要引入 FEM ，其中 Linear Element 表示相同区块内变形是一个常数。
 ![map](imgs/2022-02-24-22-04-26.png)
@@ -161,18 +161,21 @@ $$[\begin{array}{ll} x_1-x_4 & x_2-x_4 & x_3-x_4 \end{array}] = F[\begin{array}{
 即：
 $$F=D_sD_m^{-1}$$
 
-##### $\Psi(F(x))$ 的梯度
+#### $\Psi(F(x))$ 的梯度
 
 链式法则：
 $$\frac{\partial \Psi}{\partial x}=\frac{\partial F}{\partial x}: \frac{\partial \Psi}{\partial F}$$
 
-##### 总结
+#### 总结
 
 - Elastic energy: $E_i(x)=w_i\Psi(F_i(x))$
 - Gradient: $\frac{\partial E_i}{\partial x}=w_i\frac{\partial F_i}{\partial x}:P_i$
 
-##### Further Reading
+#### Further Reading
 
 - Finite Element Method, Part I
 - Or using auto-diff in Taichi
 
+## Implicit solution
+
+### The [Baraff and Witkin, 1998] style solution [link](https://www.cs.cmu.edu/~baraff/papers/sig98.pdf)
