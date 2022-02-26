@@ -178,4 +178,80 @@ $$\frac{\partial \Psi}{\partial x}=\frac{\partial F}{\partial x}: \frac{\partial
 
 ## Implicit solution
 
+为了在大时间步长的时候，计算仍能保证稳定
+
 ### The [Baraff and Witkin, 1998] style solution [link](https://www.cs.cmu.edu/~baraff/papers/sig98.pdf)
+
+### Descent solution
+
+- 梯度下降
+- 牛顿迭代
+
+### Linear Solver $Ax=b$
+
+#### direct solver
+
+精确求解：
+
+- Inversion: $x = A^{-1}b$，复杂度$O(n^3)$
+- Factorization: 若 A 为稀疏矩阵，稠密情形下复杂度仍为 $O(n^3)$，支持最大的稀疏矩阵大约到 1e6 (O(n), n 为三元组数量)
+  $$A=\left\{\begin{array}{cl}
+L U & \text {,if } A \text { is a square matrix } \\
+L D L^{T} & \text {, if } A=A^{T} \\
+L L^{T} & \text {, if } A=A^{T} \text { and } A>0
+\end{array}\right.$$
+
+#### iterative solver
+
+- 基于不动点：**Jacobi** / Gauss-Seidel / SOR / Multigrid
+- Krylov 子空间法：**Conjugate Gradient(CG)** / biCG / CR / MinRes / GMRes
+
+当问题是稀疏且规模特别大时，几乎只能使用迭代法计算。
+
+#### Factorization
+
+- Solve $Ax=b$ is equivalent to $LL^Tx=b$
+- First get L by decomposition
+- Solve $Ly=b$
+- Solve $L^Tx=y$
+
+#### Conjugate Gradient
+
+一定能保证收敛，收敛效率与 $\kappa=\frac{\lambda_{max}}{\lambda_{min}}$ 值有关（用正定矩阵最大的 Eigen value 除以最小的 Eigen value）
+
+Works **amazingly** good if $\kappa$ is small !!!!
+
+``` python
+def conjugate_gradient(A, b, x):
+  i = 0
+  r = b - A @ x
+  d = r
+  delta_new = r.dot(r)
+  delta_0 = delta_new
+  while i < i_max and delta_new/delta_0 > epsilon**2:
+    q = A @ d # expensive
+    alpha = delta_new / d.dot(q) #expensive
+    x = x + alpha * d 
+    r = b - A @ x
+    delta_old = delta_new
+    delta_new = r.dot(r) #expensive
+    beta = delta_new / delta_old
+    d = r + beta * d
+    i = i + 1
+  return x
+```
+
+提高效率的办法：
+
+- 把 dot product 放到 gpu 上
+  - 直接把 `a.dot(b)` 写在一个 `@ti.kernel` 里，Taichi 使用 thread local storage 自动优化
+- 运行 i 个迭代后，误差在 $\left\|e_{i}\right\|_{A} \leq 2\left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\right)^{i}\left\|e_{0}\right\|_{A}$
+  - 用解决 $M^{-1}Ax=M^{-1}b$ 代替 $Ax=b$ is
+  - M 的取法有：
+    - Jacobi: $M=diag(A)$
+    - Incomplte Cholesky: $M=\widetilde{L} \widetilde{L}^{\mathrm{T}}$
+    - MultiGrid
+
+Further reading:
+
+- An Introduction to the Conjugate Gradient Method Without the Agonizing Pain [[Link](https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf)]
