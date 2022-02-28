@@ -2,6 +2,9 @@
 
 SPH 光滑粒子水动力学
 
+- 科普阅读：[从伯努利方程到NS方程](http://mathcubic.org/article/article/index/id/503/cid/3.html)
+- 推导：[把NS方程简化为伯努利方程](https://zhuanlan.zhihu.com/p/94420490)
+
 ## Incompressible Navier-Stokes equation
 
 流体可分为可压缩流体（爆炸、冲击波）和不可压缩流体（缓慢的烟尘、水）。课程关注不可压缩流体。
@@ -124,7 +127,7 @@ $$\nabla f(r) \approx \sum_{j} m_j\frac{f(r_{j}) - f(r)}{\rho_j} \nabla W\left(r
 symmetric form
 $$\nabla f(r) \approx \rho \sum_{j} m_j(\frac{f(r_{j})}{\rho_j^2}+\frac{f(r)}{\rho^2}) \nabla W\left(r-r_{j}, h\right)$$
 
-## Implementation (WCSPH)
+### Implementation (WCSPH)
 
 [[实现细节](https://www.bilibili.com/video/BV1mi4y1o7wz?p=4)]
 
@@ -163,6 +166,118 @@ $$\nabla f(r) \approx \rho \sum_{j} m_j(\frac{f(r_{j})}{\rho_j^2}+\frac{f(r)}{\r
 
 ![Neighbor Search](imgs/2022-02-26-21-31-43.png)
 
+## Eulerian view
+
+相比于拉格朗日视角，把数据存在每个小球上，欧拉视角把数据存在格点上。
+
+![img](imgs/2022-02-27-19-39-28.png)
+
+### Pros and Cons
+
+#### Pros
+
+- 空间离散化的误差小，精度高，总是可以仿真出精确的值，通常用于需要精确求解的汽车、飞机制造等
+- 空间求导无需代价，只需插值就可以
+- 固定的拓扑结构，不需要 neighbor search
+- 形变问题小
+- 在多种材料中不需要显式的碰撞检测
+
+#### Cons
+
+- Advection 比较麻烦，只能知道固定位置的粒子状态，无法知道每个粒子的位置和信息
+- 边界条件不大好写（采样过少等问题）
+- 与固体的耦合不是那么容易
+
+### Spatial derivatives
+
+每一维的导数可以单独求解：
+$$\nabla q_{i, j, k}=\left[\begin{array}{l}
+\partial q_{i, j, k} / \partial x \\
+\partial q_{i, j, k} / \partial y \\
+\partial q_{i, j, k} / \partial z
+\end{array}\right]$$
+
+用[有限差分法（FDM）](https://zh.wikipedia.org/wiki/%E6%9C%89%E9%99%90%E5%B7%AE%E5%88%86%E6%B3%95)求导
+
+- Forward difference:
+  - $(\frac{\partial q}{\partial x})_i \approx \frac{q_{i+1}-q_i}{\Delta x}$
+  - Accurate to $\mathcal{O}(\Delta x)$
+  - Biased
+
+- **Central difference**
+  - $(\frac{\partial q}{\partial x})_i \approx \frac{q_{i+1}-q_{i-1}}{2 \Delta x}$
+  - Accurate to $\mathcal{O}(\Delta x^2)$
+  - Unbiased
+
+但是中间差分会有点问题，只看后一位和前一位在周期函数如$q_i=(-1)^i$上会导致求导变成常数等
+
+- 改进的中间差分
+  - $(\frac{\partial q}{\partial x})_i \approx \frac{q_{i+\frac{1}{2}}-q_{i-\frac{1}{2}}}{2 \Delta x}$
+
+![img](imgs/2022-02-27-23-00-02.png)
+
+- Staggered grid
+
+![img](imgs/2022-02-28-15-46-55.png)
+
+速度可以以标量的形式存在网格边缘上，如横向存 y 轴上的速度，竖向存 x 轴上的速度。边上的速度可以由四个值做差值确定，这种错位网格也被称为 MAC 网格。
+
+Marker and Cell (MAC) Method by Harlow and Welch [1965]
+
+- Stokes Theorem(exterior calculus)
+
+![exterior calculus](imgs/2022-02-28-15-59-23.png)
+
+### Advaction
+
+物质导数，对时间和空间两个维度拆分求导
+$$\frac{Df}{Dt}=\frac{d}{dt}f(x, t)=\frac{\partial f}{\partial t}+ v\cdot \nabla f$$
+![vector](imgs/2022-02-28-16-53-22.png)
+
+![self-advection](imgs/2022-02-28-16-53-35.png)
+
+#### Finite difference
+
+$$\frac{\partial q}{\partial t}+v \cdot \nabla q = 0$$
+$$q_{i}^{n+1}=q_{i}^{n}-\Delta t v^{n} \cdot \frac{q_{i+1}^{n}-q_{i-1}^{n}}{2 \Delta x}$$
+这种做法会逐渐改变曲线形状，是不负责任的做法
+
+#### semi-Lagrangian
+
+无条件稳定的步进方式
+
+$$ \begin{align} q^{n+1}\left(x^{n+1}\right)&=q^{n}\left(x^{n}\right)=q^{n}\left(x^{n+1}-\Delta t v^{n}\right) \\ &=\text{interpolate}(q^n, x^{n+1}-\Delta t v^{n})\end{align}$$
+
+![interpolate](imgs/2022-02-28-17-03-58.png)
+
+插值可以被写作：
+$$q_i^{n+1}=\frac{\Delta t v^n}{\Delta x} q_{i-1}^n + (1-\frac{\Delta t v^n}{\Delta x})q_i^n$$
+
+$$\Rightarrow q_i^{n+1}=q_i^n-\Delta t v^n \frac{q_i^n-q_{i-1}^n}{\Delta x}$$
+$$\Rightarrow \frac{q_i^{n+1} - q_i^n}{\Delta t} + \Delta t v^n \frac{q_i^n-q_{i-1}^n}{\Delta x} = 0$$
+
+事实上就是物质导数的 $\frac{\partial q}{\partial t}+v \cdot \frac{\partial q}{\partial x} = 0$ 的一种有限差分的形式，在流体力学中又叫做一阶迎风形式。
+
+无条件稳定意味着**数值耗散**，损失量为 $\frac{v^n\Delta x}{2}\frac{\partial^2 q}{\partial x^2}$，数值粘性（或数值阻尼）
+
+数值耗散的解决方法：
+
+- 更精确的插值：Cubic Hermite spline interpolation [[Link](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)]
+- 更少误差的方法
+  - MacCormack method  [[Link](https://en.wikipedia.org/wiki/MacCormack_method)]
+  - Back and Force Error Compensation and Correction (BFECC) [Kim et al. 2005] [[Link](https://www.cc.gatech.edu/~jarek/papers/FlowFixer.pdf)]
+
+### Projection
+
+![img](imgs/2022-02-28-23-15-33.png)
+
+### Boundary Conditions
+
+![img](imgs/2022-02-28-23-21-40.png)
+
+![img](imgs/2022-02-28-23-24-08.png)
+
 ## Example
 
 - [Eulerian Fluid](https://github.com/JerryYan97/Taichi_HW1_EulerianFluid)
+- [Stable_Fluid_Zhihu](https://zhuanlan.zhihu.com/p/150466600)  `ti example stable_fluid`
