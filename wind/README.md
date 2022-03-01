@@ -228,7 +228,7 @@ Marker and Cell (MAC) Method by Harlow and Welch [1965]
 
 ![exterior calculus](imgs/2022-02-28-15-59-23.png)
 
-### Advaction
+### Advection
 
 物质导数，对时间和空间两个维度拆分求导
 $$\frac{Df}{Dt}=\frac{d}{dt}f(x, t)=\frac{\partial f}{\partial t}+ v\cdot \nabla f$$
@@ -246,7 +246,7 @@ $$q_{i}^{n+1}=q_{i}^{n}-\Delta t v^{n} \cdot \frac{q_{i+1}^{n}-q_{i-1}^{n}}{2 \D
 
 无条件稳定的步进方式
 
-$$ \begin{align} q^{n+1}\left(x^{n+1}\right)&=q^{n}\left(x^{n}\right)=q^{n}\left(x^{n+1}-\Delta t v^{n}\right) \\ &=\text{interpolate}(q^n, x^{n+1}-\Delta t v^{n})\end{align}$$
+$$ \begin{array}{ll} q^{n+1}\left(x^{n+1}\right) &=q^{n}\left(x^{n}\right)=q^{n}\left(x^{n+1}-\Delta t v^{n}\right) \\ &=\text{interpolate}(q^n, x^{n+1}-\Delta t v^{n})\end{array}$$
 
 ![interpolate](imgs/2022-02-28-17-03-58.png)
 
