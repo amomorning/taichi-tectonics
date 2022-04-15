@@ -109,7 +109,7 @@ while gui.running:
 
 
 # export video
-# vm = ti.VideoManager('./results')
+# vm = ti.tools.VideoManager('./results')
 # for i in range(500):
 #     draw()
 #     pixel_img = pixels.to_numpy()

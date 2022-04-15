@@ -61,7 +61,7 @@ gui = ti.GUI("Voronoi", (res_x, res_y))
 
 pixels.fill(0)
 t = 0.
-# vm = ti.VideoManager('./results', framerate=24, automatic_build=True)
+# vm = ti.tools.VideoManager('./results', framerate=24, automatic_build=True)
 while gui.running:
     t += 0.03
     render(t)

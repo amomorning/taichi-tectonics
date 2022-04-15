@@ -76,7 +76,7 @@ while gui.running:
     if not pause:
         run()
 
-    pixels = 255 - ti.imresize(cell, img_size, img_size//2).astype(np.uint8) * 255
+    pixels = 255 - ti.tools.imresize(cell, img_size, img_size//2).astype(np.uint8) * 255
     gui.set_image(pixels)
 
     gui.show()
