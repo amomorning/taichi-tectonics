@@ -1,3 +1,12 @@
+---
+html:
+  embed_local_images: true
+  embed_svg: true
+  toc: true
+
+print_background: false
+---
+
 # Elasticity
 
 ## Time integration

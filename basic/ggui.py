@@ -1,5 +1,8 @@
 import taichi as ti
-ti.init(arch=ti.gpu)
+
+arch = ti.vulkan if ti._lib.core.with_vulkan() else ti.cuda
+ti.init(arch=arch)
+
 
 window = ti.ui.Window('Window Title', (800, 600))
 
