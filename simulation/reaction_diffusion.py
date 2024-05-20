@@ -47,14 +47,16 @@ def render():
         x = u[i, j]
         y = v[i, j]
 
-        # newu = 0.8*lap(u, i, j) - x*y*y + 0.99*x + 0.015
-        # newv = 0.52*lap(v, i, j) + x*y*y + 0.935*y
+        F = 0.9
+        k = 0.6
 
         du = (ti.cast(i, ti.f32)/res[0])
         dv = (ti.cast(i, ti.f32)/res[1])
 
-        newu = 0.84*du*lap(u, i, j) - x*y*y + 0.986*x + 0.0182
-        newv = 0.29*dv*lap(v, i, j) + x*y*y + 0.93*y
+        # newu = du*lap(u, i, j) - x*y*y + F*(1-x)
+        # newv = dv*lap(v, i, j) + x*y*y - (F+k)*y
+        newu = 0.84*lap(u, i, j) - x*y*y + 0.986*x + 0.0182
+        newv = 0.29*lap(v, i, j) + x*y*y + 0.93*y
 
         u[i, j] = constrain(newu, 0.0, 1.0)
         v[i, j] = constrain(newv, 0.0, 1.0)

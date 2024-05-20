@@ -3,14 +3,14 @@ from celestial_objects import Star, Planet
 
 if __name__ == "__main__":
 
-    ti.init(arch=ti.cuda)
+    ti.init(arch=ti.gpu)
 
     # control
     paused = False
     export_images = False
 
     # stars and planets
-    stars = Star(N=2, mass=1000)
+    stars = Star(N=3, mass=1000)
     
     stars.initialize(0.5, 0.5, 0.2, 10)
     planets = Planet(N=20000, mass=1)

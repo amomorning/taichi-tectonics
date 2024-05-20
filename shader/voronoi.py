@@ -8,14 +8,17 @@ res_x, res_y = 1080, 720
 
 pixels = ti.Vector.field(3, dtype=float, shape=(res_x, res_y))
 
+K = 43758.5453
+K = 300
+
 @ti.func
 def hash1(n):
-    return hsf.fract(ti.sin(n)*43758.5453)
+    return hsf.fract(ti.sin(n)*K)
 
 @ti.func
 def hash2(p):
     p = ti.Vector([p.dot(ti.Vector([127.1,311.7])), p.dot(ti.Vector([269.5,183.3]))])
-    return hsf.fract(ti.sin(p)*43758.5453)
+    return hsf.fract(ti.sin(p)*K)
 
 @ti.func
 def voronoi(p, t):
@@ -69,6 +72,7 @@ while gui.running:
     # vm.write_frame(pixels)
     # gui.text(content=f"t = %.2f"%(t), pos=(0.01, 0.95), color=0x0)
     gui.show()
+    
 
 # vm.make_video()
 

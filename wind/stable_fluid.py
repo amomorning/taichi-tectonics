@@ -245,7 +245,7 @@ def copy_divergence(div_in: ti.template(), div_out: ti.template()):
 
 
 @ti.kernel
-def apply_pressure(p_in: ti.types.ndarray(), p_out: ti.template()):
+def apply_pressure(p_in: ti.types.ndarray(), p_out: ti.template()): 
     for I in ti.grouped(p_out):
         p_out[I] = p_in[I[0] * res + I[1]]
 

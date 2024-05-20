@@ -1,5 +1,5 @@
 import taichi as ti
-ti.init(arch=ti.gpu)
+ti.init(arch=ti.cpu)
 
 res = (800, 800)
 picking = ti.field(ti.i32, 1)

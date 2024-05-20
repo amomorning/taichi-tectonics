@@ -44,8 +44,8 @@ class Ball:
                 if((self.pos[i] - self.pos[j]).norm() < self.radius[i] + self.radius[j]+0.01):
                     self.pos[i] += 0.1 * (self.pos[i] - self.pos[j])
 
-                    t = self.v[i]
-                    self.v[i] = self.v[j]
+                    t = self.v[i] * self.radius[j] / self.radius[i]
+                    self.v[i] = self.v[j] * self.radius[i] / self.radius[j]
                     self.v[j] = t
                     self.color[i] = 0x222222
                     self.color[j] = 0x222222
