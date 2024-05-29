@@ -3,13 +3,10 @@ import numpy as np
 
 ti.init(arch=ti.cpu)
 
-N = 150
+N = 100
 begins = np.random.random((N, 2))
 directions = np.random.uniform(low=-0.05, high=0.05, size=(N, 2))
-
 directions /= np.linalg.norm(directions, axis=1).reshape(-1, 1) * 30
-
-
 
 def update():
     global begins, directions
@@ -41,12 +38,12 @@ def update():
     
     begins += directions * 0.2
 
-vm = ti.tools.VideoManager('./results', framerate=24, automatic_build=True)
-gui = ti.GUI('arrows', res=(400, 400))
+# vm = ti.tools.VideoManager('./results', framerate=24, automatic_build=True)
+gui = ti.GUI('arrows', res=(800, 800))
 while gui.running:
     update()
     gui.arrows(orig=begins, direction=directions, radius=1)
-    vm.write_frame( gui.get_image())
+    # vm.write_frame( gui.get_image())
     gui.show()
 
-vm.make_video()
+# vm.make_video()
